@@ -23,14 +23,8 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
-      - name: Cache Docker layers
-        uses: actions/cache@v3
-        with:
-          path: /tmp/.buildx-cache
-          key: ${{ runner.os }}-buildx-${{ hashFiles('**/Dockerfile', '**/package.json', '**/go.mod') }}
-          restore-keys: |
-            ${{ runner.os }}-buildx-${{ hashFiles('**/Dockerfile') }}-
-            ${{ runner.os }}-buildx-
+      # ❌ เราลบ Step 'Cache Docker layers' (actions/cache@v3) ทิ้งไปเลย
+      #    เพราะ type=gha จะจัดการให้เราอัตโนมัติ
 
       - name: Log in to GitHub Container Registry
         uses: docker/login-action@v3
@@ -47,5 +41,7 @@ jobs:
           platforms: linux/amd64
           push: true
           tags: ${{ inputs.IMAGE_TAG }}
-          cache-from: type=local,src=/tmp/.buildx-cache
-          cache-to: type=local,dest=/tmp/.buildx-cache,mode=max
+          # 👇 เปลี่ยนมาใช้ type=gha
+          cache-from: type=gha
+          # 👇 เปลี่ยนมาใช้ type=gha และ mode=max เพื่อให้เขียนทับได้
+          cache-to: type=gha,mode=max
