@@ -1,0 +1,78 @@
+name: Deploy to Kubernetes Using Helm
+
+on:
+  workflow_call:
+    inputs:
+      NAMESPACE:
+        description: "The Kubernetes namespace for the Helm deployment"
+        required: true
+        type: string
+      HELM_RELEASE_NAME:
+        description: "The name of the Helm release"
+        required: true
+        type: string
+      HELM_CHART_REPO:
+        description: "The GitHub repository containing the Helm chart"
+        required: true
+        type: string
+      HELM_CHART_PATH:
+        description: "Path to the Helm chart"
+        required: true
+        type: string
+
+    secrets:
+      KUBE_CONFIG_BASE64:
+        description: "Base64 encoded Kubeconfig file for Kubernetes cluster access"
+        required: true
+      GH_PAT:
+        description: "Github Personal Access Token"
+        required: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Echo To Github
+        run: |
+          echo "Deploying '${{ inputs.HELM_RELEASE_NAME }}'"
+
+      - name: Helm Version
+        run: |
+          helm version
+
+      - name: Checkout Helm Chart Repository
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ inputs.HELM_CHART_REPO }}
+          token: ${{ secrets.GH_PAT }}
+          path: ${{ inputs.HELM_CHART_REPO }}
+          ref: main
+
+      - name: Setup Kubeconfig
+        run: |
+          mkdir -p /home/runner/.kube # Use absolute path
+
+          # Check if the KUBE_CONFIG_BASE64 secret exists
+          if [ -z "${{ secrets.KUBE_CONFIG_BASE64 }}" ]; then
+            echo "::error::KUBE_CONFIG_BASE64 secret not found. Cannot set up Kubeconfig."
+            exit 1
+          fi
+
+          # Decode the base64 Kubeconfig and save it
+          echo "${{ secrets.KUBE_CONFIG_BASE64 }}" | base64 -d > /home/runner/.kube/config # Use absolute path
+          chmod 600 /home/runner/.kube/config # Use absolute path
+          echo "KUBECONFIG=/home/runner/.kube/config" >> $GITHUB_ENV # Set env var with absolute path
+          kubectl config get-contexts --kubeconfig=/home/runner/.kube/config # Use absolute path for debug
+
+          # echo "--- Content of /home/runner/.kube/config ---" # For debugging
+          # cat /home/runner/.kube/config # For debugging
+          # echo "-------------------------------" # For debugging
+
+      - name: HELM Upgrade
+        run: |
+          echo "Upgrading Helm release '${{ inputs.HELM_RELEASE_NAME }}' in namespace '${{ inputs.NAMESPACE }}'..."
+          helm upgrade --install ${{ inputs.HELM_RELEASE_NAME }} "${{ inputs.HELM_CHART_REPO }}/${{ inputs.HELM_CHART_PATH }}" \
+            --namespace ${{ inputs.NAMESPACE }} \
+            --create-namespace
+          echo "Helm upgrade completed successfully!"
