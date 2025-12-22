@@ -11,6 +11,11 @@ on:
         description: "Image Tag"
         type: string
         required: true
+      ARGS:
+        description: "Build Arguments"
+        type: string
+        required: false
+        default: ""
 
 jobs:
   build-and-push-package:
@@ -40,3 +45,4 @@ jobs:
           tags: ${{ inputs.IMAGE_TAG }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
+          build-args: ${{ inputs.ARGS }}
