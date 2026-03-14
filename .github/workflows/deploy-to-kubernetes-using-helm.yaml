@@ -27,6 +27,12 @@ on:
       GH_PAT:
         description: "Github Personal Access Token"
         required: true
+      TS_OAUTH_ID:
+        description: "The ID of the Tailscale OAuth application"
+        required: true
+      TS_OAUTH_SECRET:
+        description: "The secret of the Tailscale OAuth application"
+        required: true
 
 jobs:
   deploy:
@@ -48,6 +54,13 @@ jobs:
           token: ${{ secrets.GH_PAT }}
           path: ${{ inputs.HELM_CHART_REPO }}
           ref: main
+
+      - name: Connect to Tailscale
+        uses: tailscale/github-action@v2
+        with:
+          oauth-client-id: ${{ secrets.TS_OAUTH_ID }}
+          oauth-secret: ${{ secrets.TS_OAUTH_SECRET }}
+          tags: tag:ci
 
       - name: Setup Kubeconfig
         run: |
