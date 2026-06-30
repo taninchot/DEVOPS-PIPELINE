@@ -48,7 +48,7 @@ jobs:
           helm version
 
       - name: Checkout Helm Chart Repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           repository: ${{ inputs.HELM_CHART_REPO }}
           token: ${{ secrets.GH_PAT }}
