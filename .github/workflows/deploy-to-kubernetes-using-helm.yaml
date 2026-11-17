@@ -85,7 +85,7 @@ jobs:
       - name: HELM Upgrade
         run: |
           echo "Upgrading Helm release '${{ inputs.HELM_RELEASE_NAME }}' in namespace '${{ inputs.NAMESPACE }}'..."
-          helm upgrade --install ${{ inputs.HELM_RELEASE_NAME }} "${{ inputs.HELM_CHART_REPO }}/${{ inputs.HELM_CHART_PATH }}" \
+          helm upgrade --install ${{ inputs.HELM_RELEASE_NAME }} "./${{ inputs.HELM_CHART_REPO }}/${{ inputs.HELM_CHART_PATH }}" \
             --namespace ${{ inputs.NAMESPACE }} \
             --create-namespace
           echo "Helm upgrade completed successfully!"
